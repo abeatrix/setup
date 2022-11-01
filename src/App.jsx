@@ -3,6 +3,7 @@ import './App.css';
 import logo from './logo.svg';
 
 function App() {
+  const [hostname, setHostname] = useState(null);
   const [size, setSize] = useState('XS');
   const [mode, setMode] = useState('new');
   const [version, setVersion] = useState('');
@@ -21,6 +22,10 @@ function App() {
   };
 
   useEffect(() => {
+    if (!hostname) {
+      const uri = new URL(window.location.origin);
+      setHostname(uri.hostname);
+    }
     if (blob && fileName) {
       setUploadStatus('UPLOADING');
       const postRequest = {
@@ -29,7 +34,7 @@ function App() {
         body: JSON.stringify({ blob: blob, name: fileName }),
       };
       try {
-        fetch(`http://localhost:3344/upload`, postRequest)
+        fetch(`http://${hostname}:3389/upload`, postRequest)
           .then(async (res) => await res.json())
           .then((res) => setUploadStatus(res.message))
           .catch((error) => {
@@ -60,10 +65,15 @@ function App() {
       body: JSON.stringify(requestBody),
     };
     try {
-      fetch(`http://localhost:3344/${mode}`, postRequest)
+      fetch(`http://${hostname}:3389/${mode}`, postRequest)
         .then(async (res) => await res.json())
         .then((res) => console.log(res.message, res.status));
       setSubmitted(!showErrors);
+      if (!showErrors) {
+        setTimeout(() => {
+          window.location.replace(`http://${hostname}:80`);
+        }, '50000');
+      }
     } catch (error) {
       setShowErrors(error);
       setSubmitted(false);
